@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 
 @Component({
   selector: 'app-server-status',
@@ -7,37 +7,51 @@ import { Component, OnInit } from '@angular/core';
   templateUrl: './server-status.component.html',
   styleUrl: './server-status.component.css'
 })
-// In Angular (en TypeScript), "implements OnInit" geeft aan dat de klasse een bepaalde interface implementeert. De class moet zich aan de structuur van de interface houden (in dit geval OnInit). 
+
 export class ServerStatusComponent implements OnInit {
-  currentStatus: 'online' | 'offline' | 'unknown' = 'online';
+  // currentStatus: 'online' | 'offline' | 'unknown' = 'online';
+  currentStatus = signal<'online' | 'offline' | 'unknown'>('online');
+  private destroyRef = inject(DestroyRef);
 
-  // De constructor wordt direct aangeroepen wanneer het component wordt geïnstantieerd, voordat Angular de component heeft geïnitialiseerd. De constructor kan worden gebruikt voor basisinitialisatie.
-  // constructor() {
-  //   setInterval(() => {
-  //     const rnd = Math.random(); // 0 - 0.9999999
+  constructor() {
+    // console.log(this.currentStatus);
+    effect(() => {
+      console.log(this.currentStatus());
+    })
+  }
 
-  //     if (rnd < 0.5) {
-  //       this.currentStatus = 'online';
-  //     } else if (rnd < 0.9) {
-  //       this.currentStatus = 'offline';
-  //     } else {
-  //       this.currentStatus = 'unknown';
-  //     }
-  //   }, 5000);
-  // } 
+  // // type of interval is NodeJS.Timeout or undefined
+  // private interval?: NodeJS.Timeout;
 
-  // ngOnInit is een Angular-levenscyclusmethode die wordt aangeroepen nadat de Angular-component volledig is geïnitialiseerd, inclusief de bindings en afhankelijkheden.
   ngOnInit()  {
-    setInterval(() => {
+    //console.log('ON INIT');
+    const interval = setInterval(() => {
       const rnd = Math.random(); // 0 - 0.9999999
 
       if (rnd < 0.5) {
-        this.currentStatus = 'online';
+        // this.currentStatus = 'online';
+        this.currentStatus.set('online');
       } else if (rnd < 0.9) {
-        this.currentStatus = 'offline';
+        // this.currentStatus = 'offline';
+        this.currentStatus.set('offline');
       } else {
-        this.currentStatus = 'unknown';
+        // this.currentStatus = 'unknown';
+        this.currentStatus.set('unknown');
       }
     }, 5000);
+
+    this.destroyRef.onDestroy(() => {
+      clearInterval(interval);
+    })
   }
+
+  ngAfterViewInit() {
+    console.log('AFTER VIEW INIT');
+  }
+
+  // ngOnDestroy(): void {
+  //   // clean up interval when the component is removed to prevent memory leaks
+  //   clearTimeout(this.interval);
+  //   console.log('ON DESTROY');
+  // }
 }
